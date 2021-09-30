@@ -1,7 +1,7 @@
-let numbers = [1,2,3];
+var numbers = [1,2,3];
 
-triple = (numbers) =>{
-    result = [];
+var triple = (numbers) =>{
+    var result = [];
     for(var i=0; i<numbers.length; i++){
         result.push(numbers[i]*3);
     }

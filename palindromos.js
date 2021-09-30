@@ -19,4 +19,19 @@ function palindrome(xs){
     return ys;
 }
 
+function palindrome(n){
+    var aux_str = "";
+    if(Number.isInteger(n)){
+        n = n.toString();
+    }
+    for(j=n.length-1; j>=0; j--){
+        aux_str += n[j];
+    }
+    if(n == aux_str){
+        return n;
+        }
+}
+
+const convertAndReverse = number.toString()
+
 console.log(palindrome(numbers));
