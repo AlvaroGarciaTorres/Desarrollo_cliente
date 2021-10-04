@@ -35,7 +35,7 @@ function filter(ns, f){
     ys = [];
     for(var i=0; i<ns.length; i++){
         if(f(ns[i])){
-            ys.push(f(ns[i]));
+            ys.push(ns[i]);
         }       
     }
     return ys;
