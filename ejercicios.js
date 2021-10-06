@@ -1,17 +1,17 @@
 var numbers = [1, 3, 4, 2];
 
 /*function sumArray(xs){
-    var sum = 0;
+    var x = 0;
     for(var i = 0; i<xs.length; i++){
-        sum += xs[i];
+        x += xs[i];
     }
-    return sum;
+    return x;
 }
 
 console.log(sumArray(numbers));
 
 function maxNumber(xs){
-    var max_number = 0;
+    var max_number = xs[0];
     for(var i = 0; i<xs.length; i++){
         if(xs[i]>max_number){
             max_number = xs[i];
@@ -35,31 +35,26 @@ function totalEven(xs){
 console.log(totalEven(numbers));*/
 
 function sumArray(n, aux){
-    return aux += n;
+    return aux + n;
 }
 
 function maxNumber(n, aux){
-    if(n>aux){
-        aux = n;
-    }
-    return aux;
+    return n > aux ? n : aux;
 }
 
 function totalEven(n, aux){
-    if(n%2 == 0){
-        aux += 1;
-    }
-    return aux;
+    return n%2 == 0 ? aux + 1 : aux;
+    
 }
 
-function reduce(xs, f){
-    var aux = 0;
+function reduce(xs, f, init){
+    var acc = init;
     for(var i = 0; i<xs.length; i++){
-        aux = f(xs[i], aux);
+        acc = f(xs[i], acc);
     }
-    return aux;
+    return acc;
 }
 
-console.log(reduce(numbers, sumArray));
-console.log(reduce(numbers, maxNumber));
-console.log(reduce(numbers, totalEven));
+console.log(reduce(numbers, sumArray, 0));
+console.log(reduce(numbers, maxNumber, numbers[0]));
+console.log(reduce(numbers, totalEven, 0));
