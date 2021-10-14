@@ -17,6 +17,10 @@ function filter_recur(xs, f) {
 
 console.log(filter_recur([18, 23, 3, 42, 17], adults));
 
+
+
+
+
 //Implementación de la función map con reduce:
 
 function incNumber(n){

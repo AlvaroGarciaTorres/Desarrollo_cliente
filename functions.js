@@ -7,14 +7,13 @@ function isEven(n){
 }
 
 function some(xs, f){
-    var bool = false;
     for(var i = 0; i<xs.length; i++){
         if(f(xs[i])){
-            bool = true;
+            return true;
         }
-    if (bool == true) break;
+    //if (bool == true) break;
     }
-    return bool;
+    return false;
 }
 
 console.log(some(numbers, isEven));
@@ -22,13 +21,12 @@ console.log(some(numbers, isEven));
 //Function every()
 
 function every(xs, f){
-    var bool = true;
     for(var i = 0; i<xs.length; i++){
         if(!f(xs[i])){
-            bool = false;
+            return false;
         }
     }    
-    return bool;
+    return true;
 }
 
 console.log(every(numbers, isEven));
@@ -60,7 +58,7 @@ function flat(xs){
         return [];
     }
     var [head, ...tail] = xs;
-    return (Array.isArray(head)) ? flat(head).concat(flat(tail)): [xs[0]].concat(flat(tail));
+    return (Array.isArray(head)) ? flat(head).concat(flat(tail)): [head].concat(flat(tail));
 }
 
 console.log(flat(test));
@@ -83,7 +81,7 @@ console.log(flatMap(numbers, arrayOfDouble));
 
 //Reduce recursivo
 
-function sumArray(n, acc){
+function sumArray(acc, n){
     return acc + n;
 }
 
@@ -92,7 +90,7 @@ function reduce_recur(xs, f, init){
         return init;
     }
     var [head,...tail] = xs;
-    return f(head, reduce_recur(tail, f, init));
+    return f(reduce_recur(tail, f, init), head);
 }
 
 console.log(reduce_recur(numbers, sumArray, 0));
