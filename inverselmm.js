@@ -2,13 +2,12 @@ const data = 8;
 const addresses = 4;
 const oc = 4;
 
-const program_output =[    
-    "INPUT",
-    "STORE 1111",
-    "INPUT",
-    "ADD 1111",
-    "OUTPUT"
-] 
+var program_output =    
+`INPUT
+STORE 1111
+INPUT
+ADD 1111
+OUTPUT` 
 
 const dict = {
     "0000": "END",
@@ -35,16 +34,18 @@ function getKeyByValue(object, value){
     return Object.keys(object).find(key => object[key] === value)
 }
 
+program_output = program_output.split("\n");
+console.log(program_output)
+
 function getAllOper(program_output){
     for(let i=0; i<program_output.length; i++){
-    if(withoutOpers.includes(program_output[i])){
-        if(program_output[i] === "INPUT"){
-            program_output[i] += " 0001";
-        } else if (program_output[i] === "OUTPUT"){
-            program_output[i] += " 0010";
-        } else if (program_output[i] === "END") program_output[i] += " 0000";
-    }
-    
+        if(withoutOpers.includes(program_output[i])){
+            if(program_output[i] === "INPUT"){
+                program_output[i] += " 0001";
+            } else if (program_output[i] === "OUTPUT"){
+                program_output[i] += " 0010";
+            } else if (program_output[i] === "END") program_output[i] += " 0000";
+        }   
     }
 }
 
