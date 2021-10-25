@@ -3,9 +3,8 @@ var program_output_string =
 STORE 1111
 INPUT
 ADD 1111
-OUTPUT`
-
-const hex = "91 3f 91 1f 92 00 00 00 00 00 00 00 00 00 00 00";
+OUTPUT
+END`
 
 const dict = {
     "0000": "END",
@@ -51,6 +50,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
         this.ac = Array(size).fill(0).join(""); //acumulador
         this.ram = new RAM(words, size);
         this.zeroes = Array(size).fill(0).join("");
+        this.io = new IO();
     }
 
     fetch(){ //carga en el registro de instruccion la siguiente instruccion a ejecutar
@@ -65,7 +65,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
         console.log(oc, oper);
         if(oc === "0101"){ //LOAD
             this.ac = this.ram.read(oper);
-        } else if(oc === "0001"){ //ADD cambiar a switch
+        } else if(oc === "0001"){ //ADD
             var number = this.ram.read(oper);
             this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
         } else if(oc === "0011"){ //STORE almacena en memoria lo que haya en el acumulador
@@ -84,12 +84,14 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
                 this.pc = this.ram.read(oper);
             }
         } else if(oc === "0000"){ //END
-
+            this.cir = "00000000";
+        } else if(oc === "1001"){  
+            if(oper != "0010"){//INPUT
+                this.ac = this.io.getInputs(); //Añadir input del array de inputs
+            } else {
+                this.io.getOutputs().push(parseInt(this.ac, 2)); //OUTPUT Añadir a output array
+            }
         }
-         
-         //END termina el programa le dices al so que ha acabado
-         //falta un sistema iterativo -> ejecutar hasta que condicion de salida (END) 
-
         return this;
     }
 }
@@ -194,38 +196,78 @@ class OS{ //Es el sistema operativo, lo que hace es cargar el pograma en memoria
         .map(x => this.zeros + x)
         .map(x => x.slice(-8))
 
-        console.log(this.cpu.ram.memory)
-
         for(var i = 0; i<this.cpu.ram.memory.length; i++){
             if(ram[i]){
                 this.cpu.ram.memory[i] = ram[i];
             } else this.cpu.ram.memory[i] = Array(8).fill(0).join("");
             
         }
-        console.log(this.cpu.ram.memory)
         return this.cpu.ram.memory;
     }
     
+    executeProgram(){
+        for(var i = 0; i<this.cpu.ram.memory.length; i++){
+            if(i == 0){
+                this.cpu.fetch().execute();
+            } else {
+                while(this.cpu.cir != Array(8).fill(0).join("")){
+                    this.cpu.fetch().execute(); 
+                }
+            }  
+        }           
+        return this.cpu;
+    }
 }
 
-class IO{ //para INPUT/OUTPUT probablemente se necesite que la cpu o el so tenga tb un io o algo asi
-          //INPUT/OUTPUT en forma de array cuando vas a ejecutar el so le tienes que dar los inputs, todos, pero
-          //el programa los tiene que leer cuando toque, cuando vea la instruccion de INPUT.
-          //Cuando llegue a INPUT lee el primer input que le haya pasado y lo almacena en el acumulador
-          //cuando vuelva a dar input leera el segundo...
-          //output coloca el acumulador en un array y la salida sera el conjunto de outputs que haya recibido
-          //para esto crear la clase IO y que el SO o CPU tienen un IO tb
+class IO{ //output coloca el acumulador en un array y la salida sera el conjunto de outputs que haya recibido
+    constructor(){
+        this.inputsCounter = -1;
+        this.outPutsCounter = -1;
+        this.inputs = [1, 2, 3];
+        this.outputs = [];
+    }
+
+    getInputs(){
+        this.inputsCounter += 1;
+        return this.inputs[this.inputsCounter];
+    }
+
+    getOutputs(){
+        return this.outputs;
+    }
 }
+
+input = 
+`INPUT
+STORE 1111
+OUTPUT
+INPUT
+OUTPUT
+ADD 1111
+OUTPUT
+END`
 
 var cpu = new CPU(4, 8);
 
-input = 
-`LOAD 0000
-ADD 1111
-STORE 0010
-SUBTRACT 0011`
+var os = new OS(4,8);
+console.log(os.load((os.compile(input))))
+console.log(os.executeProgram())
 
-console.log(cpu.ram.write("0000", "01011111") //LOAD
+
+
+
+
+
+
+
+
+
+
+
+/*os.decompile(hex);
+os.compile(program_output_string)
+os.load(hex);*/
+/*console.log(cpu.ram.write("0000", "01011111") //LOAD
                    .write("0001", "00011110") //ADD                 
                    .write("1111", "00000011")
                    .write("1110", "00000010") //write devuelve a la memoria no a la cpu
@@ -251,11 +293,4 @@ console.log(cpu.fetch()
                .fetch()
                .execute()
                );
-
-
-
-/*var os = new OS(4,8);
-console.log(os.load((os.compile(input))))
-os.decompile(hex);
-os.compile(program_output_string)
-os.load(hex);*/
+*/
