@@ -63,47 +63,55 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
         const oc = this.cir.slice(0, this.opSize);
         const oper = this.cir.slice(this.opSize);
         console.log(oc, oper);
-        if(oc === "0101"){ //LOAD
-            this.ac = this.ram.read(oper);
-        } else if(oc === "0001"){ //ADD
-            var number = this.ram.read(oper);
-            this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
-        } else if(oc === "0011"){ //STORE almacena en memoria lo que haya en el acumulador
-            this.ram.write(oper, this.ac);
-        } else if(oc === "0010"){ //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
-            var number = this.ram.read(oper);
-            this.ac = (this.zeroes + (parseInt(this.ac, 2) - parseInt(number, 2)).toString(2)).slice(-this.size);
-        } else if(oc === "0110"){ //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
-            this.pc = this.ram.read(oper);
-        } else if(oc === "0111"){ //BRANCH IF ACC = 0 si el acumulador es 0 pones el cp en esa direccion si no la mantienes igual
-            if(this.ac === 0){
+        switch (oc){
+            case "0101": //LOAD
+                this.ac = this.ram.read(oper);
+                break;
+            case "0001": //ADD
+                var number = this.ram.read(oper);
+                this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
+                break;
+            case "0011": //STORE almacena en memoria lo que haya en el acumulador
+                this.ram.write(oper, this.ac);
+            case "0010": //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
+                var number = this.ram.read(oper);
+                this.ac = (this.zeroes + (parseInt(this.ac, 2) - parseInt(number, 2)).toString(2)).slice(-this.size);
+                break;
+            case "0110": //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
                 this.pc = this.ram.read(oper);
-            }
-        } else if(oc === "1000"){ //BRANCH IF ACC >= 0
-            if(this.ac >= 0){
-                this.pc = this.ram.read(oper);
-            }
-        } else if(oc === "0000"){ //END
-            this.cir = "00000000";
-        } else if(oc === "1001"){  
-            if(oper != "0010"){//INPUT
-                this.ac = this.io.getInputs(); //Añadir input del array de inputs
-            } else {
-                this.io.getOutputs().push(parseInt(this.ac, 2)); //OUTPUT Añadir a output array
-            }
+                break;
+            case "0111": //BRANCH IF ACC = 0 si el acumulador es 0 pones el cp en esa direccion si no la mantienes igual
+                if(this.ac === 0){
+                    this.pc = this.ram.read(oper);
+                }
+                break;
+            case "1000": //BRANCH IF ACC >= 0
+                if(this.ac >= 0){
+                    this.pc = this.ram.read(oper);
+                }
+                break;
+            case "0000": //END
+                this.cir = Array(8).fill(0).join("");
+            case "1001": //INPUT/OUTPUT
+                if(oper != "0010"){ 
+                    this.ac = this.io.getInputs().toString(2); //Añadir input del array de inputs
+                } else { 
+                    this.io.getOutputs().push(parseInt(this.ac, 2)); //Añadir al array de outputs
+                }
+                break;
         }
         return this;
     }
 }
 
-class OS{ //Es el sistema operativo, lo que hace es cargar el pograma en memoria y compilar y decirle a la CPU que empieze a ejecutarlo
+class OS{ //sistema operativo
     constructor(words, size){
         this.cpu = new CPU(words, size);
         this.zeros = Array(8).fill(0).join("");
         this.oc = words;
     }
 
-    compile(program_output_string){ //a partir del código escrito debe generar hexadecimal ensamblador -> hex
+    compile(program_output_string){ //ensamblador -> hex
         const withoutOpers = ["END", "INPUT", "OUTPUT"];
         function getKeyByValue(object, value){
             return Object.keys(object).find(key => object[key] === value)
@@ -151,7 +159,7 @@ class OS{ //Es el sistema operativo, lo que hace es cargar el pograma en memoria
         return hex;
     }
 
-    decompile(hex){ //a partir de un código hexadecimal genera el programa hex -> ensamblador
+    decompile(hex){ //hex -> ensamblador
         const withoutOpers = ["END", "INPUT", "OUTPUT"];
         const ram = hex.split(" ")
         .map(x => parseInt(x, 16))
@@ -205,7 +213,7 @@ class OS{ //Es el sistema operativo, lo que hace es cargar el pograma en memoria
         return this.cpu.ram.memory;
     }
     
-    executeProgram(){
+    executeProgram(){ //recorre las instrucciones cargadas en la memoria
         for(var i = 0; i<this.cpu.ram.memory.length; i++){
             if(i == 0){
                 this.cpu.fetch().execute();
@@ -217,22 +225,25 @@ class OS{ //Es el sistema operativo, lo que hace es cargar el pograma en memoria
         }           
         return this.cpu;
     }
+
+    printOutputs(){
+        return this.cpu.io.outputs;
+    }
 }
 
-class IO{ //output coloca el acumulador en un array y la salida sera el conjunto de outputs que haya recibido
+class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.outPutsCounter = -1;
-        this.inputs = [1, 2, 3];
+        this.inputs = [5, 5, 3];
         this.outputs = [];
     }
 
-    getInputs(){
+    getInputs(){ //devuelve el siguiente input
         this.inputsCounter += 1;
         return this.inputs[this.inputsCounter];
     }
 
-    getOutputs(){
+    getOutputs(){ //recoge los output
         return this.outputs;
     }
 }
@@ -240,10 +251,9 @@ class IO{ //output coloca el acumulador en un array y la salida sera el conjunto
 input = 
 `INPUT
 STORE 1111
-OUTPUT
 INPUT
-OUTPUT
-ADD 1111
+SUBTRACT 1111
+BRANCH_EQ_0 1111
 OUTPUT
 END`
 
@@ -252,6 +262,8 @@ var cpu = new CPU(4, 8);
 var os = new OS(4,8);
 console.log(os.load((os.compile(input))))
 console.log(os.executeProgram())
+console.log()
+console.log(os.printOutputs())
 
 
 
@@ -294,3 +306,33 @@ console.log(cpu.fetch()
                .execute()
                );
 */
+
+/*if(oc === "0101"){ //LOAD
+            this.ac = this.ram.read(oper);
+        } else if(oc === "0001"){ //ADD
+            var number = this.ram.read(oper);
+            this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
+        } else if(oc === "0011"){ //STORE almacena en memoria lo que haya en el acumulador
+            this.ram.write(oper, this.ac);
+        } else if(oc === "0010"){ //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
+            var number = this.ram.read(oper);
+            this.ac = (this.zeroes + (parseInt(this.ac, 2) - parseInt(number, 2)).toString(2)).slice(-this.size);
+        } else if(oc === "0110"){ //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
+            this.pc = this.ram.read(oper);
+        } else if(oc === "0111"){ //BRANCH IF ACC = 0 si el acumulador es 0 pones el cp en esa direccion si no la mantienes igual
+            if(this.ac === 0){
+                this.pc = this.ram.read(oper);
+            }
+        } else if(oc === "1000"){ //BRANCH IF ACC >= 0
+            if(this.ac >= 0){
+                this.pc = this.ram.read(oper);
+            }
+        } else if(oc === "0000"){ //END
+            this.cir = "00000000";
+        } else if(oc === "1001"){  
+            if(oper != "0010"){//INPUT
+                this.ac = this.io.getInputs().toString(2); //Añadir input del array de inputs
+            } else {
+                this.io.getOutputs().push(parseInt(this.ac, 2)); //OUTPUT Añadir a output array
+            }
+        }*/
