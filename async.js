@@ -57,16 +57,18 @@ const step1 = (x, y, z, k) => asyncProduct(x, y, function (product) {
 numbers = [1, 4, 6, 2, 4];
 
 function asyncAddArray(xs, cbk){
-    if(xs.length === 0){
-        var acc=0;
-    }
-
-    var [head, ...tail] = xs;
-    asyncAdd(head, result, function(result){
-        asyncAddArray(tail, function(result){
-            asyncAdd(head, result)
+    if(xs.length == 1){
+        console.log(xs[0]);
+    } else {
+        var [head, neck, ...tail] = xs;
+    
+        asyncAdd(head, neck, function(result){
+            tail.push(result);
+            asyncAddArray(tail, function(result){
+                console.log(result);
+            })
         })
-    })
+    }
 }
 
 asyncAddArray(numbers, function(result){
@@ -75,5 +77,39 @@ asyncAddArray(numbers, function(result){
 
 // Sumar asíncronamente [1, 2, 3, 4] + [0, -1, 1, 2] ==  [1, 1, 4, 6]; implementando
 
-function asyncAddArrays(xs, ys, cbk) {
+numbers1 = [1, 2, 3, 4];
+numbers2 = [0, -1, 1, 2];
+
+function asyncAddArrays(xs, ys, zs, cbk) {
+    if(xs.length == 1){
+        asyncAdd(xs[0], ys[0], function(result){
+            zs.push(result);
+            console.log(zs);
+        })
+    } else {
+        var [xhead, ...xtail] = xs;
+        var [yhead, ...ytail] = ys;
+        asyncAdd(xhead, yhead, function(result){
+            zs.push(result);
+            asyncAddArrays(xtail, ytail, zs, function(result){
+
+            })
+        })
+    }   
 }
+
+asyncAddArrays(numbers1, numbers2, [], function(result){
+    console.log(result);
+})
+
+/*function asyncAddArrays(xs, ys, cbk) {
+    finalArray = [];
+    
+    for(var i = 0; i<xs.length; i++){
+        asyncAdd(xs[i], ys[i], function(result){
+            finalArray.push(result);
+            console.log(finalArray);
+        })
+    }   
+}*/
+

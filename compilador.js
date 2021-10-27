@@ -29,14 +29,15 @@ class RAM{
         this.memory = Array(2**words).fill(this.zeroes); //valores almacenados en la memoria
     }
 
-    read(dir){
-        return this.memory[parseInt(dir, 2)]; //devuelve el contenido de la direccion de memoria que se le pase
+    read(dir){ //devuelve el contenido de la direccion de memoria que se le pase
+        return this.memory[parseInt(dir, 2)]; 
     }
 
     write(dir, data){ //escribe un dato en la posicion de memoria que se le pase
         this.memory[parseInt(dir, 2)] = (this.zeroes + data).slice(-this.size); //formatea el dato a binario
-        return this; //devuelve la memoria
+        return this;
     }
+
 }
 
 class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las direcciones
@@ -75,7 +76,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
                 this.ram.write(oper, this.ac);
             case "0010": //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
                 var number = this.ram.read(oper);
-                this.ac = (this.zeroes + (parseInt(this.ac, 2) - parseInt(number, 2)).toString(2)).slice(-this.size);
+                this.ac = this.io.toComplementA2((this.io.fromComplementA2(this.ac, 2)) - (this.io.fromComplementA2(number, 2)));
                 break;
             case "0110": //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
                 this.pc = this.ram.read(oper);
@@ -94,9 +95,9 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
                 this.cir = Array(8).fill(0).join("");
             case "1001": //INPUT/OUTPUT
                 if(oper != "0010"){ 
-                    this.ac = this.io.getInputs().toString(2); //Añadir input del array de inputs
-                } else { 
-                    this.io.getOutputs().push(parseInt(this.ac, 2)); //Añadir al array de outputs
+                    this.ac = this.io.toComplementA2(this.io.getInputs()); //.toString(2); //Añadir input del array de inputs
+                } else {
+                    this.io.getOutputs().push(this.io.fromComplementA2(this.ac)); //Añadir al array de outputs
                 }
                 break;
         }
@@ -107,7 +108,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
 class OS{ //sistema operativo
     constructor(words, size){
         this.cpu = new CPU(words, size);
-        this.zeros = Array(8).fill(0).join("");
+        this.zeroes = Array(8).fill(0).join("");
         this.oc = words;
     }
 
@@ -164,7 +165,7 @@ class OS{ //sistema operativo
         const ram = hex.split(" ")
         .map(x => parseInt(x, 16))
         .map(x => x.toString(2))
-        .map(x => this.zeros + x)
+        .map(x => this.zeroes + x)
         .map(x => x.slice(-8))
         .map((x, i) => (
             {
@@ -201,7 +202,7 @@ class OS{ //sistema operativo
         const ram = hex.split(" ")
         .map(x => parseInt(x, 16))
         .map(x => x.toString(2))
-        .map(x => this.zeros + x)
+        .map(x => this.zeroes + x)
         .map(x => x.slice(-8))
 
         for(var i = 0; i<this.cpu.ram.memory.length; i++){
@@ -234,8 +235,10 @@ class OS{ //sistema operativo
 class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.inputs = [5, 5, 3];
+        this.inputs = [-2, -1, 3];
         this.outputs = [];
+        this.zeroes = Array(8).fill(0).join("");
+        this.size = 8;
     }
 
     getInputs(){ //devuelve el siguiente input
@@ -246,14 +249,51 @@ class IO{ //input/output
     getOutputs(){ //recoge los output
         return this.outputs;
     }
+
+    toComplementA2(number){ //number -> string en C2
+        if(number < 0){
+            number = number.toString(2).slice(1);
+            number = (this.zeroes + number).slice(-this.size);
+            number = number.split("");
+            for(var i = 0; i<number.length; i++){
+                if(number[i] == "0"){
+                    number[i] = "1";
+                } else number[i] = "0";
+            }
+            number = number.join("");
+            number = (parseInt(number, 2) + 1).toString(2);
+            return number;
+        } else {
+            number = number.toString(2);
+            number = (this.zeroes + number).slice(-this.size);
+            return number;
+        }
+    }
+
+    fromComplementA2(string){ //string -> number en C1
+        if(string.startsWith("1")){
+            string = (parseInt(string, 2) - 1).toString(2).split("");
+            for(var i = 0; i<string.length; i++){
+                if(string[i] == "0"){
+                    string[i] = "1";
+                } else string[i] = "0";
+            }
+            string = parseInt("-" + string.join(""), 2);
+            return string;
+        } else {
+            string = parseInt(string, 2);
+            return string;
+        }
+    }
 }
 
 input = 
 `INPUT
+OUTPUT
 STORE 1111
 INPUT
+OUTPUT
 SUBTRACT 1111
-BRANCH_EQ_0 1111
 OUTPUT
 END`
 
@@ -263,11 +303,13 @@ var os = new OS(4,8);
 console.log(os.load((os.compile(input))))
 console.log(os.executeProgram())
 console.log()
-console.log(os.printOutputs())
+console.log("Outputs: ", os.printOutputs())
 
+/*
+os.cpu.io.toComplementA2(-1);
 
-
-
+os.cpu.io.fromComplementA2("11111111");
+*/
 
 
 
