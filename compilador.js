@@ -63,6 +63,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
     execute(){ //ejecuta la instruccion cir tiene una parte que es el codigo de operacion (4 bits) y otra que es el operando (4 bits)
         const oc = this.cir.slice(0, this.opSize);
         const oper = this.cir.slice(this.opSize);
+        console.log("..............");
         console.log(oc, oper);
         switch (oc){
             case "0101": //LOAD
@@ -79,16 +80,17 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
                 this.ac = this.io.toComplementA2((this.io.fromComplementA2(this.ac, 2)) - (this.io.fromComplementA2(number, 2)));
                 break;
             case "0110": //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
-                this.pc = this.ram.read(oper);
+                this.pc = (this.zeroes + oper).slice(-this.size)
                 break;
-            case "0111": //BRANCH IF ACC = 0 si el acumulador es 0 pones el cp en esa direccion si no la mantienes igual
-                if(this.ac === 0){
-                    this.pc = this.ram.read(oper);
+            case "0111": //BRANCH IF ACC = 0 si el acumulador es 0 pones el pc en esa direccion si no la mantienes igual
+                if(this.ac === "00000000"){
+                    this.pc = (this.zeroes + oper).slice(-this.size)
                 }
                 break;
             case "1000": //BRANCH IF ACC >= 0
+                this.ac = this.io.toComplementA2(this.ac);
                 if(this.ac >= 0){
-                    this.pc = this.ram.read(oper);
+                    this.pc = (this.zeroes + oper).slice(-this.size)
                 }
                 break;
             case "0000": //END
@@ -235,7 +237,7 @@ class OS{ //sistema operativo
 class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.inputs = [-2, -1, 3];
+        this.inputs = [0, 1, 4, 3];
         this.outputs = [];
         this.zeroes = Array(8).fill(0).join("");
         this.size = 8;
@@ -297,12 +299,39 @@ SUBTRACT 1111
 OUTPUT
 END`
 
+inputClase =
+`INPUT
+BRANCH_EQ_0 0101
+ADD 1111
+STORE 1111
+BRANCH 0000
+LOAD 1111
+OUTPUT
+END`
+
+input2 = 
+`INPUT
+INPUT
+INPUT
+INPUT
+LOAD 1111
+BRACH_EQ_0 1001
+LOAD 1110
+ADD 1100
+STORE 1100
+LOAD 1111
+SUBTRACT 1101
+STORE 1111
+BRACH 0000
+LOAD 1100
+OUTPUT
+END`
+
 var cpu = new CPU(4, 8);
 
 var os = new OS(4,8);
-console.log(os.load((os.compile(input))))
+console.log(os.load((os.compile(input2))))
 console.log(os.executeProgram())
-console.log()
 console.log("Outputs: ", os.printOutputs())
 
 /*
