@@ -63,46 +63,60 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
     execute(){ //ejecuta la instruccion cir tiene una parte que es el codigo de operacion (4 bits) y otra que es el operando (4 bits)
         const oc = this.cir.slice(0, this.opSize);
         const oper = this.cir.slice(this.opSize);
-        console.log("..............");
+        /*console.log("..............");
         console.log(oc, oper);
+        console.log("Counter: ", parseInt(this.pc, 2));
+        console.log("Acumulador: ", parseInt(this.ac, 2));*/
         switch (oc){
             case "0101": //LOAD
+                //console.log("LOAD");
                 this.ac = this.ram.read(oper);
                 break;
             case "0001": //ADD
                 var number = this.ram.read(oper);
+                //console.log("ADD ", parseInt(number, 2));
                 this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
                 break;
             case "0011": //STORE almacena en memoria lo que haya en el acumulador
+                //console.log("STORE");
                 this.ram.write(oper, this.ac);
+                break;
             case "0010": //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
                 var number = this.ram.read(oper);
                 this.ac = this.io.toComplementA2((this.io.fromComplementA2(this.ac, 2)) - (this.io.fromComplementA2(number, 2)));
                 break;
             case "0110": //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
-                this.pc = (this.zeroes + oper).slice(-this.size)
+                //console.log("BRANCH");  
+                this.pc = (this.zeroes + oper).slice(-this.size);
                 break;
             case "0111": //BRANCH IF ACC = 0 si el acumulador es 0 pones el pc en esa direccion si no la mantienes igual
-                if(this.ac === "00000000"){
-                    this.pc = (this.zeroes + oper).slice(-this.size)
+                //console.log("BRANCH=0");
+            if(this.ac === "00000000"){
+                    this.pc = (this.zeroes + oper).slice(-this.size);
                 }
                 break;
             case "1000": //BRANCH IF ACC >= 0
+                //console.log("BRANCH>0");
                 this.ac = this.io.toComplementA2(this.ac);
                 if(this.ac >= 0){
-                    this.pc = (this.zeroes + oper).slice(-this.size)
+                    this.pc = (this.zeroes + oper).slice(-this.size);
                 }
                 break;
             case "0000": //END
+                //console.log("END");
                 this.cir = Array(8).fill(0).join("");
+                break;
             case "1001": //INPUT/OUTPUT
-                if(oper != "0010"){ 
+                if(oper != "0010"){
+                    //console.log("INPUT"); 
                     this.ac = this.io.toComplementA2(this.io.getInputs()); //.toString(2); //Añadir input del array de inputs
                 } else {
+                    //console.log("OUTPUT");
                     this.io.getOutputs().push(this.io.fromComplementA2(this.ac)); //Añadir al array de outputs
                 }
                 break;
         }
+        //console.log("Acumulador: ", parseInt(this.ac, 2));
         return this;
     }
 }
@@ -237,7 +251,7 @@ class OS{ //sistema operativo
 class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.inputs = [0, 1, 4, 3];
+        this.inputs = [1, 3, 4, 0];
         this.outputs = [];
         this.zeroes = Array(8).fill(0).join("");
         this.size = 8;
@@ -291,11 +305,9 @@ class IO{ //input/output
 
 input = 
 `INPUT
-OUTPUT
 STORE 1111
 INPUT
-OUTPUT
-SUBTRACT 1111
+ADD 1111
 OUTPUT
 END`
 
@@ -310,11 +322,7 @@ OUTPUT
 END`
 
 input2 = 
-`INPUT
-INPUT
-INPUT
-INPUT
-LOAD 1111
+`LOAD 1111
 BRACH_EQ_0 1001
 LOAD 1110
 ADD 1100
@@ -330,8 +338,8 @@ END`
 var cpu = new CPU(4, 8);
 
 var os = new OS(4,8);
-console.log(os.load((os.compile(input2))))
-console.log(os.executeProgram())
+os.load((os.compile(input)))
+os.executeProgram()
 console.log("Outputs: ", os.printOutputs())
 
 /*
