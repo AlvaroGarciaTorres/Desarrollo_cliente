@@ -33,7 +33,7 @@ function multicompose(...fs){ //Esto indica que se van a recibir muchas cosas qu
     return function (x){
         for(var i = fs.length -1; i>=0; i--){
             f = fs[i];
-            x =f(x);
+            x = f(x);
         }
         return x;
     }

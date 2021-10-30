@@ -57,8 +57,9 @@ const step1 = (x, y, z, k) => asyncProduct(x, y, function (product) {
 numbers = [1, 4, 6, 2, 4];
 
 function asyncAddArray(xs, cbk){
-    //falta poner si el array vale cero
-    if(xs.length == 1){
+    if(xs.length == 0){
+        cbk(xs);
+    } else if(xs.length == 1){
         cbk(xs[0]);
     } else {
         var [head, neck, ...tail] = xs;
@@ -73,7 +74,7 @@ function asyncAddArray(xs, cbk){
 }
 
 asyncAddArray(numbers, function(result){
-    console.log(result);
+    //console.log(result);
 })
 
 // Sumar asíncronamente [1, 2, 3, 4] + [0, -1, 1, 2] ==  [1, 1, 4, 6]; implementando
@@ -97,17 +98,157 @@ function asyncAddArrays(xs, ys, zs, cbk) {
 }
 
 asyncAddArrays(numbers1, numbers2, [], function(result){
-    console.log(result);
+    //console.log(result);
 })
 
-/*function asyncAddArrays(xs, ys, cbk) {
-    finalArray = [];
-    
-    for(var i = 0; i<xs.length; i++){
+//Correccion Javier
+
+function asyncAddArrayIter(xs,cbk){
+    for(let x of xs){
+        cbk = (function (cbk) {
+            return function (result) {
+                asyncAdd(x, result, cbk)
+            }
+        })(cbk)
+    }
+    cbk(0);
+}
+
+asyncAddArrayIter(numbers, function(result){
+    //console.log(result);
+})
+
+//ReduceRight
+
+function asyncReduceRight(xs, f, init, cbk){
+    for(let x of xs){
+        cbk = (function (cbk) {
+            return function (result) {
+                f(x, result, cbk)
+            }
+        })(cbk)
+    }
+    cbk(init);
+}
+
+asyncReduceRight(numbers, asyncProduct, 4, function(result){
+    //console.log(result);
+})
+
+//Correccion Javier asyncAddArrays
+
+function asyncAddArrays2(xs, ys, cbk){
+    const zs = [];
+    const max_size = Math.min(xs.length, ys.length);
+    let size = 0;
+    for(let i = 0; i < max_size; i++){
         asyncAdd(xs[i], ys[i], function(result){
-            finalArray.push(result);
-            console.log(finalArray);
+            size++;
+            zs[i] = result;
+            if(size === max_size){
+                cbk(zs);
+            }
         })
-    }   
+    }
+}
+
+asyncAddArrays2(numbers1, numbers2, function(result){
+    //console.log(result);
+})
+
+//ZipWith -> juntame dos arrays con una función
+
+function zipWith(xs, ys, f, cbk){
+    const zs = [];
+    const max_size = Math.min(xs.length, ys.length);
+    let size = 0;
+    for(let i = 0; i < max_size; i++){
+        f(xs[i], ys[i], function(result){
+            size++;
+            zs[i] = result;
+            if(size === max_size){
+                cbk(zs);
+            }
+        })
+    }
+}
+
+zipWith(numbers1, numbers2, asyncAdd, function(result){
+    //console.log(result);
+})
+
+zipWith(numbers1, numbers2, asyncProduct, function(result){
+    //console.log(result);
+})
+
+//asyncMap -> transforma un array;
+
+/*function asynInc(x, cbk){
+    setTimeout(function(){
+        cbk(x + 1);
+    }, Math.floor(Math.random() * 20) + 50);
 }*/
 
+function asyncInc(x, cbk){
+    asyncAdd(x, 1, cbk);
+}
+
+function asyncDouble(x, cbk){
+    asyncProduct(x, 2, cbk);
+}
+
+function asyncMap(xs, f, cbk){
+    const ys = [];
+    const max_size = xs.length;
+    let size = 0;
+    for(let i = 0; i < xs.length; i++){
+        f(xs[i], function(result){
+            size++;
+            ys[i] = result;
+            if(size == max_size){
+                cbk(ys);
+            }            
+        });               
+    }
+}
+
+asyncMap(numbers, asyncInc, function(result){  
+    //console.log(result);
+});
+
+asyncMap(numbers, asyncDouble, function(result){  
+    //console.log(result);
+});
+
+//asyncCompose(asyncf, asyncg)
+
+function multicompose(...fs){ //Esto indica que se van a recibir muchas cosas que se almacenarán como un array
+    fs = [...fs]; //si el array está vacío cuando te lo pasan no ejecutas nada, devuelves lo que te pasen.
+    return function(x, cbk){
+        for(var i = fs.length -1; i>=0; i--){
+            console.log(x)
+            f = fs[i];
+            console.log(f)
+            f(x, function(result){
+                console.log(",,,,,,",result);
+                x = result;
+                console.log("22222",x);
+            });
+        }
+        return x;
+    }
+}
+
+function asyncCompose(f, cbk){
+    cbk = function(x){
+        f(x);
+    }
+}
+
+
+
+
+
+console.log(multicompose(asyncInc, asyncInc)(4));
+
+//console.log(asyncCompose((result) => result, asyncInc, asyncDouble)(4));

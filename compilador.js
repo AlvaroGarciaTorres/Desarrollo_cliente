@@ -338,7 +338,7 @@ END`
 var cpu = new CPU(4, 8);
 
 var os = new OS(4,8);
-os.load((os.compile(input)))
+os.load((os.compile(inputClase)))
 os.executeProgram()
 console.log("Outputs: ", os.printOutputs())
 
