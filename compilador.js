@@ -126,6 +126,19 @@ class OS{ //sistema operativo
         this.cpu = new CPU(words, size);
         this.zeroes = Array(8).fill(0).join("");
         this.oc = words;
+        this.timer;
+    }
+
+    setTimer(){
+        this.timer = setInterval(function(){
+            console.log("<<<<");
+        });
+    }
+
+    stopTimer(){
+        setTimeout(function(){
+            clearInterval(this.timer);
+        },4000)
     }
 
     compile(program_output_string){ //ensamblador -> hex
@@ -239,7 +252,7 @@ class OS{ //sistema operativo
                     this.cpu.fetch().execute(); 
                 }
             }  
-        }           
+        }          
         return this.cpu;
     }
 

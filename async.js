@@ -222,33 +222,50 @@ asyncMap(numbers, asyncDouble, function(result){
 
 //asyncCompose(asyncf, asyncg)
 
-function multicompose(...fs){ //Esto indica que se van a recibir muchas cosas que se almacenarán como un array
-    fs = [...fs]; //si el array está vacío cuando te lo pasan no ejecutas nada, devuelves lo que te pasen.
-    return function(x, cbk){
+/*function multicompose(cbk, ...fs){ //Esto indica que se van a recibir muchas cosas que se almacenarán como un array
+    cbk(function(x, cbk){
         for(var i = fs.length -1; i>=0; i--){
-            console.log(x)
             f = fs[i];
             console.log(f)
-            f(x, function(result){
+            cbk(f(x, function(result){
                 console.log(",,,,,,",result);
                 x = result;
-                console.log("22222",x);
-            });
+                console.log("22222", x);
+            }));
         }
-        return x;
-    }
+    })*/
+
+
+
+/*function asyncCompose(f, cbk){
+        x = f(x, cbk);
+        console.log(x)
+        cbk(x);
+
+}*/
+
+function compose(f, cbk){
+    cbk(function (cbk){
+        f(cbk, function(result){
+            cbk(result)
+        })  
+    });
 }
 
-function asyncCompose(f, cbk){
-    cbk = function(x){
-        f(x);
-    }
-}
+prueba = (x) => asyncInc(x, function(result){
+    console.log(result)
+});
+
+//prueba(4);
+
+compose(asyncInc, function(result){
+    console.log(result(4))
+})
 
 
 
+/*console.log(multicompose(asyncInc, asyncInc)(4));
 
-
-console.log(multicompose(asyncInc, asyncInc)(4));
-
-//console.log(asyncCompose((result) => result, asyncInc, asyncDouble)(4));
+asyncCompose(asyncInc, function(f){
+    console.log(f(4));
+})*/
