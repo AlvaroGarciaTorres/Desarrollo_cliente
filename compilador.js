@@ -26,15 +26,15 @@ class RAM{
         this.words = words;
         this.size = size;
         this.zeroes = Array(size).fill(0).join("");
-        this.memory = Array(2**words).fill(this.zeroes); //valores almacenados en la memoria
+        this.memory = Array(2**words).fill(this.zeroes); //values stored in the memory
     }
 
-    read(dir){ //devuelve el contenido de la direccion de memoria que se le pase
+    read(dir){ //reads the content of the memory's direction provided
         return this.memory[parseInt(dir, 2)]; 
     }
 
-    write(dir, data){ //escribe un dato en la posicion de memoria que se le pase
-        this.memory[parseInt(dir, 2)] = (this.zeroes + data).slice(-this.size); //formatea el dato a binario
+    write(dir, data){ //writes a data into the memory's direction provided
+        this.memory[parseInt(dir, 2)] = (this.zeroes + data).slice(-this.size); //to binary
         return this;
     }
 
@@ -42,25 +42,25 @@ class RAM{
 
 class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las direcciones
            //y un bus de datos que tiene el tamaño de los datos. Necesitamos pasarle las dos cosas en el constructor
-    constructor(words, size){ //tamaño de la arquitectura
+    constructor(words, size){ //architecture's size
         this.opSize = 4;
         this.size = size;
         this.words = words;
-        this.pc = Array(words).fill(0).join("");//contador de programa
-        this.cir = Array(size).fill(0).join("");//registro de instruccion
-        this.ac = Array(size).fill(0).join(""); //acumulador
+        this.pc = Array(words).fill(0).join("");//program counter
+        this.cir = Array(size).fill(0).join("");//current instruction register
+        this.ac = Array(size).fill(0).join(""); //accumulator
         this.ram = new RAM(words, size);
         this.zeroes = Array(size).fill(0).join("");
         this.io = new IO();
     }
 
-    fetch(){ //carga en el registro de instruccion la siguiente instruccion a ejecutar
-        this.cir = this.ram.read(this.pc) //lee el contador del programa
-        this.pc = (this.zeroes + (parseInt(this.pc, 2) + 1).toString(2)).slice(-this.size); //aumenta el pc en 1
+    fetch(){ //loads into the cir the next instruction to execute
+        this.cir = this.ram.read(this.pc) //reads the pc
+        this.pc = (this.zeroes + (parseInt(this.pc, 2) + 1).toString(2)).slice(-this.size); //increases pc by 1
         return this;
     }
 
-    execute(){ //ejecuta la instruccion cir tiene una parte que es el codigo de operacion (4 bits) y otra que es el operando (4 bits)
+    execute(){ //executes the instruction in the cir (4 bits for the operator and 4 bits for the operation code)
         const oc = this.cir.slice(0, this.opSize);
         const oper = this.cir.slice(this.opSize);
         /*console.log("..............");
@@ -75,21 +75,21 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
             case "0001": //ADD
                 var number = this.ram.read(oper);
                 //console.log("ADD ", parseInt(number, 2));
-                this.ac = (this.zeroes + (parseInt(this.ac, 2) + parseInt(number, 2)).toString(2)).slice(-this.size);
+                this.ac = this.io.toComplementA2(this.io.fromComplementA2(this.ac, 2) + this.io.fromComplementA2(number, 2));
                 break;
-            case "0011": //STORE almacena en memoria lo que haya en el acumulador
+            case "0011": //STORE
                 //console.log("STORE");
                 this.ram.write(oper, this.ac);
                 break;
-            case "0010": //SUBTRACT le quita al acumulador lo que haya en esa direccion (ac-direccion)
+            case "0010": //SUBTRACT
                 var number = this.ram.read(oper);
                 this.ac = this.io.toComplementA2((this.io.fromComplementA2(this.ac, 2)) - (this.io.fromComplementA2(number, 2)));
                 break;
-            case "0110": //BRANCH ALWAYS le pasas una instruccion y una direccion y pone el contador del programa en esa direccion)
+            case "0110": //BRANCH ALWAYS
                 //console.log("BRANCH");  
                 this.pc = (this.zeroes + oper).slice(-this.size);
                 break;
-            case "0111": //BRANCH IF ACC = 0 si el acumulador es 0 pones el pc en esa direccion si no la mantienes igual
+            case "0111": //BRANCH IF ACC = 0 
                 //console.log("BRANCH=0");
             if(this.ac === "00000000"){
                     this.pc = (this.zeroes + oper).slice(-this.size);
@@ -109,10 +109,10 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
             case "1001": //INPUT/OUTPUT
                 if(oper != "0010"){
                     //console.log("INPUT"); 
-                    this.ac = this.io.toComplementA2(this.io.getInputs()); //.toString(2); //Añadir input del array de inputs
+                    this.ac = this.io.toComplementA2(this.io.getInputs());
                 } else {
                     //console.log("OUTPUT");
-                    this.io.getOutputs().push(this.io.fromComplementA2(this.ac)); //Añadir al array de outputs
+                    this.io.getOutputs().push(this.io.fromComplementA2(this.ac));
                 }
                 break;
         }
@@ -121,7 +121,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
     }
 }
 
-class OS{ //sistema operativo
+class OS{ //operating system
     constructor(words, size){
         this.cpu = new CPU(words, size);
         this.zeroes = Array(8).fill(0).join("");
@@ -129,7 +129,7 @@ class OS{ //sistema operativo
         this.timer;
     }
 
-    setTimer(){
+    /*setTimer(){
         this.timer = setInterval(function(){
             console.log("<<<<");
         });
@@ -139,9 +139,9 @@ class OS{ //sistema operativo
         setTimeout(function(){
             clearInterval(this.timer);
         },4000)
-    }
+    }*/
 
-    compile(program_output_string){ //ensamblador -> hex
+    compile(program_output_string){ //assembler -> hex
         const withoutOpers = ["END", "INPUT", "OUTPUT"];
         function getKeyByValue(object, value){
             return Object.keys(object).find(key => object[key] === value)
@@ -189,7 +189,7 @@ class OS{ //sistema operativo
         return hex;
     }
 
-    decompile(hex){ //hex -> ensamblador
+    decompile(hex){ //hex -> assembler
         const withoutOpers = ["END", "INPUT", "OUTPUT"];
         const ram = hex.split(" ")
         .map(x => parseInt(x, 16))
@@ -227,7 +227,7 @@ class OS{ //sistema operativo
     }
 
     
-    load(hex){ //carga en memoria el programa en binario (se lo pasan en hexadecimal)
+    load(hex){ //hex -> binary loads program in the memory
         const ram = hex.split(" ")
         .map(x => parseInt(x, 16))
         .map(x => x.toString(2))
@@ -243,7 +243,7 @@ class OS{ //sistema operativo
         return this.cpu.ram.memory;
     }
     
-    executeProgram(){ //recorre las instrucciones cargadas en la memoria
+    executeProgram(){ //executes the instructions loaded in the memory
         for(var i = 0; i<this.cpu.ram.memory.length; i++){
             if(i == 0){
                 this.cpu.fetch().execute();
@@ -264,22 +264,22 @@ class OS{ //sistema operativo
 class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.inputs = [1, 3, 4, 0];
+        this.inputs = [-1, -3, -4, 0];
         this.outputs = [];
         this.zeroes = Array(8).fill(0).join("");
         this.size = 8;
     }
 
-    getInputs(){ //devuelve el siguiente input
+    getInputs(){ //provides inputs
         this.inputsCounter += 1;
         return this.inputs[this.inputsCounter];
     }
 
-    getOutputs(){ //recoge los output
+    getOutputs(){ //recovers outputs
         return this.outputs;
     }
 
-    toComplementA2(number){ //number -> string en C2
+    toComplementA2(number){ //number -> string in C2
         if(number < 0){
             number = number.toString(2).slice(1);
             number = (this.zeroes + number).slice(-this.size);
@@ -299,7 +299,7 @@ class IO{ //input/output
         }
     }
 
-    fromComplementA2(string){ //string -> number en C1
+    fromComplementA2(string){ //string -> number in C1
         if(string.startsWith("1")){
             string = (parseInt(string, 2) - 1).toString(2).split("");
             for(var i = 0; i<string.length; i++){
