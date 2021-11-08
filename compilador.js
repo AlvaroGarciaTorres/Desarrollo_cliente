@@ -116,7 +116,7 @@ class CPU{ //Una CPU tiene un bus de direcciones que tiene el tamaño de las dir
                 }
                 break;
         }
-        //console.log("Acumulador: ", parseInt(this.ac, 2));
+        //console.log("Acumulador: ", this.ac);
         return this;
     }
 }
@@ -264,7 +264,7 @@ class OS{ //operating system
 class IO{ //input/output 
     constructor(){
         this.inputsCounter = -1;
-        this.inputs = [-1, -3, -4, 0];
+        this.inputs = [-1, 3, -4, 0];
         this.outputs = [];
         this.zeroes = Array(8).fill(0).join("");
         this.size = 8;
@@ -352,8 +352,11 @@ var cpu = new CPU(4, 8);
 
 var os = new OS(4,8);
 os.load((os.compile(inputClase)))
-os.executeProgram()
+console.log(os.executeProgram())
 console.log("Outputs: ", os.printOutputs())
+
+
+
 
 /*
 os.cpu.io.toComplementA2(-1);

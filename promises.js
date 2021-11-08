@@ -68,10 +68,10 @@ function print(msg, x){
 
 const promiseReduce = function(xs, f, init){
     if(xs.length == 0){ //cuando no quedan elementos en el array se devuelve el valor de inicio
-        return init;
+        return Promise.resolve(init);
     }
     var [head, ...tail] = xs; //se separan el primer valor del array y el resto
-    return f(head, init).then(function(result){ //se le pasan a la función f el primer valor del array y el inicial
+    return f(init, head).then(function(result){ //se le pasan a la función f el primer valor del array y el inicial
         return promiseReduce(tail, f, result); //el resultado se le pasa a promiseReduce como valor inicial (Recursión)      
     });
 }
@@ -92,7 +92,7 @@ const promiseDouble = function(x){
 const promiseCompose = function(...fs){
     if(fs.length === 0){ //cuando no quedan funciones se devuelve una función que devuelve valor de x
         return function(x){
-            return x;
+            return Promise.resolve(x);
         }
     }
     

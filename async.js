@@ -242,7 +242,7 @@ asyncMap(numbers, asyncDouble, function(result){
         console.log(x)
         cbk(x);
 
-}*/
+}
 
 function compose(f, cbk){
     cbk(function (cbk){
